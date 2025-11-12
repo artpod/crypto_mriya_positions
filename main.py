@@ -788,12 +788,12 @@ def run():
             print("Failed create pinned:", r)
 
     next_daily = compute_next_9am()
-    next_daily_pnl = compute_next_time_at(16, 21)
+    next_daily_pnl = compute_next_time_at(22, 0)
     try:
         if state.get("last_daily_pnl_date"):
             last_date = datetime.fromisoformat(state["last_daily_pnl_date"]).date()
             if last_date >= datetime.now(TZ).date():
-                next_daily_pnl = compute_next_time_at(16, 21, after=datetime.now(TZ) + timedelta(days=1))
+                next_daily_pnl = compute_next_time_at(22, 0, after=datetime.now(TZ) + timedelta(days=1))
     except Exception:
         pass
 
@@ -974,7 +974,7 @@ def run():
                     print("Daily PnL sent for", target_day.isoformat())
                 else:
                     print("Daily PnL failed for", target_day.isoformat())
-                next_daily_pnl = compute_next_time_at(16, 21, after=now + timedelta(seconds=60))
+                next_daily_pnl = compute_next_time_at(22, 0, after=now + timedelta(seconds=60))
 
         except Exception as e:
             print("Loop error:", e)
