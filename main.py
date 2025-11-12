@@ -563,12 +563,12 @@ def make_pinned_text(positions):
             # (Використовуємо 3 пробіли для імітації "tab")
             
             entry_s = f"{entry:.3f}" if isinstance(entry, (int,float)) else entry
-            lines.append(f"   📈 <b>Вхід:</b> {entry_s}")
+            lines.append(f"    <b>Вхід:</b> {entry_s}")
             
-            lines.append(f"   📦 <b>Розмір:</b> {size_str}")
+            lines.append(f"    <b>Розмір:</b> {size_str}")
             
             leverage_str = f"{lev}x" if lev != "-" else "-"
-            lines.append(f"   💥 <b>Плече:</b> {leverage_str}")
+            lines.append(f"    <b>Плече:</b> {leverage_str}")
 
             # 3. UPNL зі знаком (+/-) та емодзі
             upnl = compute_upnl_for_position(p)
