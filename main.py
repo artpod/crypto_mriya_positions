@@ -577,10 +577,10 @@ def make_pinned_text(positions):
                 # Додаємо знак "+" для позитивного PnL
                 sign = "+" if q > 0 else ""
                 # Різні емодзі для прибутку/збитку
-                upnl_emoji = "💰" if q >= 0 else "📉"
-                lines.append(f"{upnl_emoji} <b>UPNL: <b>{sign}{q:.3f} USDT</b></b>")
+                #upnl_emoji = "💰" if q >= 0 else "📉"
+                lines.append(f"   <b>UPNL: <b>{sign}{q:.3f} USDT</b></b>")
             else:
-                lines.append(f"💰 <b>UPNL:</b> <i>розрахунок...</i>")
+                lines.append(f"   <b>UPNL:</b> <i>розрахунок...</i>")
             
             # Додаємо порожній рядок-роздільник між позиціями
             lines.append("") 
