@@ -543,19 +543,49 @@ def make_pinned_text(positions):
     if not positions:
         lines.append("— Немає активних позицій —")
     else:
+        # Додаємо порожній рядок для відступу після заголовка
+        lines.append("") 
+        
         for i,p in enumerate(positions,1):
-            sym=p.get("symbol"); side=p.get("side")
-            entry=p.get("entryPrice") or "-"
-            lev=p.get("leverage") or "-"
+            sym = p.get("symbol")
+            side = p.get("side")
+            entry = p.get("entryPrice") or "-"
+            lev = p.get("leverage") or "-"
             size_str = format_size_display(p.get("size"), p.get("raw",{}))
-            upnl = compute_upnl_for_position(p)
-            upnl_str = ""
-            if upnl:
-                q = upnl["upnl_quote"]; b = upnl["upnl_base"]
-                upnl_str = f" — <b>UPNL: {q:.3f} USDT</b>"
+            
+            # --- Нова логіка форматування ---
+            
+            # 1. Заголовок з емодзі для LONG/SHORT
+            side_emoji = "🟢" if side == "LONG" else "🔴"
+            lines.append(f"<b>{i}) {sym} — {side} {side_emoji}</b>")
+            
+            # 2. Інформація з відступами
+            # (Використовуємо 3 пробіли для імітації "tab")
+            
             entry_s = f"{entry:.3f}" if isinstance(entry, (int,float)) else entry
-            lines.append(f"{i}) <b>{sym} — {side}</b> — {size_str} — <b>Вхід:</b> {entry_s} — Плече {lev}{upnl_str}")
-    lines.append("")
+            lines.append(f"   📈 <b>Вхід:</b> {entry_s}")
+            
+            lines.append(f"   📦 <b>Розмір:</b> {size_str}")
+            
+            leverage_str = f"{lev}x" if lev != "-" else "-"
+            lines.append(f"   💥 <b>Плече:</b> {leverage_str}")
+
+            # 3. UPNL зі знаком (+/-) та емодзі
+            upnl = compute_upnl_for_position(p)
+            if upnl:
+                q = upnl["upnl_quote"]
+                # Додаємо знак "+" для позитивного PnL
+                sign = "+" if q > 0 else ""
+                # Різні емодзі для прибутку/збитку
+                upnl_emoji = "💰" if q >= 0 else "📉"
+                lines.append(f"   {upnl_emoji} <b>UPNL: <b>{sign}{q:.3f} USDT</b></b>")
+            else:
+                lines.append(f"   💰 <b>UPNL:</b> <i>розрахунок...</i>")
+            
+            # Додаємо порожній рядок-роздільник між позиціями
+            lines.append("") 
+
+    # Рядок оновлення залишаємо в кінці (без відступу)
     lines.append(f"Оновлено: {datetime.now(TZ).strftime('%Y-%m-%d %H:%M')} ({cfg.get('TIMEZONE')})")
     return "\n".join(lines)
 
