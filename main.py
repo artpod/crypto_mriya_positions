@@ -609,7 +609,7 @@ def format_closed_using_history(old_norm, hist):
     entry_s = f"{float(entry):.4f}" if isinstance(entry, (int,float,str)) and str(entry).replace(".","",1).isdigit() else entry
     
     # ВИПРАВЛЕННЯ 1: else exit_price замість else exit_s
-    exit_s = f"{float(exit_price):.3f}" if isinstance(exit_price, (int,float,str)) and str(exit_price).replace(".","",1).isdigit() else exit_price
+    exit_s = f"{float(exit_price):.4f}" if isinstance(exit_price, (int,float,str)) and str(exit_price).replace(".","",1).isdigit() else exit_price
     
     return (f"🟢 <b>Позиція закрита</b>\n"
             f"<b>{old_norm.get('symbol')} — {old_norm.get('side')}</b> — {size_str}\n"
@@ -753,14 +753,14 @@ def format_cancelled_order(o, reason="Скасовано"):
     try:
         if sl_price and float(sl_price) > 0:
             order_types.append("Stop Loss")
-            sl_price_s = f"{float(sl_price):.3f}" if isinstance(sl_price, (int,float,str)) and str(sl_price).replace(".","",1).isdigit() else sl_price
+            sl_price_s = f"{float(sl_price):.4f}" if isinstance(sl_price, (int,float,str)) and str(sl_price).replace(".","",1).isdigit() else sl_price
             price_lines.append(f"SL: {sl_price_s}")
     except: pass
     
     try:
         if tp_price and float(tp_price) > 0:
             order_types.append("Take Profit")
-            tp_price_s = f"{float(tp_price):.3f}" if isinstance(tp_price, (int,float,str)) and str(tp_price).replace(".","",1).isdigit() else tp_price
+            tp_price_s = f"{float(tp_price):.4f}" if isinstance(tp_price, (int,float,str)) and str(tp_price).replace(".","",1).isdigit() else tp_price
             price_lines.append(f"TP: {tp_price_s}")
     except: pass
 
