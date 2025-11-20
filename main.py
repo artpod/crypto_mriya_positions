@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 # simple_mexc_futures_bot_v11_orders.py
-# v11.10:
-# - Fixed KeyError: 'limit_orders' by correcting the .pop() logic
-#   (Was popping the whole key, not just the oid)
-# - v11.9: MAJOR FIX: Stop orders (SL/TP) are a single API object.
-# - Bot now detects CHANGES (e.g., adding an SL to a TP) and re-sends
-#   the notification instead of just looking for "new" orders.
-# - format_new_stop_order() now supports showing BOTH SL and TP
-#   in the same message (e.g., "Stop Loss / Take Profit").
-# - Kept v11.8 logic for finding volume from the parent position.
+# v11.14: FIXED UnboundLocalError (exit_s) & restored compute_next_9am
 
 import os, time, json, hmac, hashlib, requests, pathlib
 from datetime import datetime, timedelta, time as dtime
@@ -428,6 +420,13 @@ def compute_next_time_at(hour, minute=0, after=None):
         target = target + timedelta(days=1)
     return target
 
+# -----------------------------------------------
+# RESTORED FUNCTION: compute_next_9am
+# -----------------------------------------------
+def compute_next_9am(after=None):
+    return compute_next_time_at(9, 0, after)
+# -----------------------------------------------
+
 def fetch_all_history_positions_day(start_ms, end_ms):
     page = 1
     page_size = 100
@@ -562,7 +561,7 @@ def make_pinned_text(positions):
             # 2. Інформація з відступами
             # (Використовуємо 3 пробіли для імітації "tab")
             
-            entry_s = f"{entry:.3f}" if isinstance(entry, (int,float)) else entry
+            entry_s = f"{entry:.4f}" if isinstance(entry, (int,float)) else entry
             lines.append(f"    <b>Вхід:</b> {entry_s}")
             
             lines.append(f"    <b>Розмір:</b> {size_str}")
@@ -597,7 +596,7 @@ def format_new_position(p, sl=None, tp=None):
     liq = p.get("liquidatePrice") or "-"
     sl_line = f"\nSL: {sl}" if sl else ""
     tp_line = f"\nTP: {tp}" if tp else ""
-    entry_s = f"{entry:.3f}" if isinstance(entry, (int,float)) else entry
+    entry_s = f"{entry:.4f}" if isinstance(entry, (int,float)) else entry
     return (f"⚡️ <b>Нова позиція (FUTURES)</b>\n<b>{sym} — {side}</b>\n{size_str}\n<b>Вхід:</b> {entry_s}\nПлече: {lev}\nЛіквідація: {liq}{sl_line}{tp_line}\n⏱ {datetime.now(TZ).strftime('%Y-%m-%d %H:%M')} ({cfg.get('TIMEZONE')})")
 
 def format_closed_using_history(old_norm, hist):
@@ -607,8 +606,11 @@ def format_closed_using_history(old_norm, hist):
     if realised is None: realised = hist.get("closeProfitLoss")
     size_str = format_size_display(old_norm.get("size"), old_norm.get("raw",{}))
     realised_str = f"{float(realised):.3f}" if realised is not None else "—"
-    entry_s = f"{float(entry):.3f}" if isinstance(entry, (int,float,str)) and str(entry).replace(".","",1).isdigit() else entry
-    exit_s = f"{float(exit_price):.3f}" if isinstance(exit_price, (int,float,str)) and str(exit_price).replace(".","",1).isdigit() else exit_s
+    entry_s = f"{float(entry):.4f}" if isinstance(entry, (int,float,str)) and str(entry).replace(".","",1).isdigit() else entry
+    
+    # ВИПРАВЛЕННЯ 1: else exit_price замість else exit_s
+    exit_s = f"{float(exit_price):.3f}" if isinstance(exit_price, (int,float,str)) and str(exit_price).replace(".","",1).isdigit() else exit_price
+    
     return (f"🟢 <b>Позиція закрита</b>\n"
             f"<b>{old_norm.get('symbol')} — {old_norm.get('side')}</b> — {size_str}\n"
             f"<b>Вхід:</b> {entry_s}\n"
@@ -638,8 +640,11 @@ def format_closed_fallback(old_norm):
             pnl = None
     pnl_str = f"{float(pnl):.3f}" if pnl is not None else "—"
     size_str = format_size_display(old_norm.get("size"), raw)
-    entry_s = f"{float(entry):.3f}" if isinstance(entry, (int,float,str)) and str(entry).replace(".","",1).isdigit() else entry
-    exit_s = f"{float(exit_price):.3f}" if isinstance(exit_price, (int,float,str)) and str(exit_price).replace(".","",1).isdigit() else exit_s
+    entry_s = f"{float(entry):.4f}" if isinstance(entry, (int,float,str)) and str(entry).replace(".","",1).isdigit() else entry
+    
+    # ВИПРАВЛЕННЯ 2: else exit_price замість else exit_s
+    exit_s = f"{float(exit_price):.4f}" if isinstance(exit_price, (int,float,str)) and str(exit_price).replace(".","",1).isdigit() else exit_price
+    
     return (f"🟢 <b>Позиція закрита</b>\n"
             f"<b>{old_norm.get('symbol')} — {old_norm.get('side')}</b> — {size_str}\n"
             f"<b>Вхід:</b> {entry_s}\n"
@@ -657,7 +662,7 @@ def format_new_limit_order(o):
     side = side_map.get(o.get("side"), "UNKNOWN")
     price = o.get("price") or "-"
     size_str = format_size_display(None, o) # Use order 'vol'
-    price_s = f"{float(price):.3f}" if isinstance(price, (int,float,str)) and str(price).replace(".","",1).isdigit() else price
+    price_s = f"{float(price):.4f}" if isinstance(price, (int,float,str)) and str(price).replace(".","",1).isdigit() else price
     
     return (f"🔔 <b>Новий лімітний ордер</b>\n"
             f"<b>{sym} — {side}</b>\n"
@@ -780,6 +785,7 @@ def format_cancelled_order(o, reason="Скасовано"):
 
 
 # daily helper
+# ВІДНОВЛЕНО: Ця функція була видалена помилково, повернув її
 def compute_next_9am(after=None):
     if after is None:
         after = datetime.now(TZ)
